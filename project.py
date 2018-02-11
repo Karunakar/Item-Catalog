@@ -11,6 +11,8 @@ import httplib2
 import json
 from flask import make_response
 import requests
+from functools import wraps
+
 
 app = Flask(__name__)
 
@@ -26,7 +28,17 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
-
+# Check for user login status
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' in login_session:
+            return f(*args, **kwargs)
+        else:
+            return redirect(url_for('showLogin', next=request.url))
+    return decorated_function
+	
+	
 # Create anti-forgery state token
 @app.route('/login')
 def showLogin():
@@ -39,6 +51,7 @@ def showLogin():
 	
 @app.route('/logout')
 def logout():
+    print login_session['username']
     if 'provider' in login_session:
         if login_session['provider'] == 'google':
           gdisconnect()
@@ -50,7 +63,8 @@ def logout():
         del login_session['user_id']
         del login_session['provider']
         flash("you have succesfully been logout")
-        return redirect(url_for('showRestaurants'))
+        print login_session['username']
+        return redirect(url_for('login'))
     else:
         flash("you were not logged in")
         return redirect(url_for('showRestaurants'))
@@ -153,7 +167,7 @@ def gdisconnect():
         return response
     print 'In gdisconnect access token is %s', access_token
     print 'User name is: '
-    print login_session['username']
+    # print login_session['username']
 
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
     h = httplib2.Http()
@@ -178,6 +192,7 @@ def gdisconnect():
 
 # JSON APIs to view Restaurant Information
 @app.route('/restaurant/<int:restaurant_id>/menu/JSON')
+@login_required
 def restaurantMenuJSON(restaurant_id):
     restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
     items = session.query(MenuItem).filter_by(
@@ -206,9 +221,17 @@ def showRestaurants():
 
 # Create a new restaurant
 
-
 @app.route('/restaurant/new/', methods=['GET', 'POST'])
+@login_required
 def newRestaurant():
+    
+   
+
+    # Check if user is logged in
+    if 'provider' in login_session:
+        if 'username' not in login_session:
+	        return redirect('/login')
+		
     if request.method == 'POST':
         newRestaurant = Restaurant(name=request.form['name'])
         session.add(newRestaurant)
