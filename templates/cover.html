@@ -1,28 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-{% include "header.html" %}
-
-    <div class="row text-center welcome-msg">
-    </div>
-    <div class="row">
-        <img src={{url_for('static', filename="workspace.jpg")}} class="img-responsive">
-    </div>
-    <hr>
-  
-     
-
-<div id="result"></div>
 
 
-
-<div class="vertical-menu">
-{% for category in categories %}
-                    <a href="{{url_for('showCategoryItems', category_name=category.name)}}" class=" active ">{{category
-                        .name}}</a>
-                {% endfor %}
-  <a href="#" class="active">Home</a>
- 
-</div>
 
 {% endblock %}
 
