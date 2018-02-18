@@ -1,11 +1,38 @@
-<div class="row top-menu">
-	<div class="col-md-6">
-		<a href="{{url_for('showRestaurants')}}">
-			<span class="glyphicon glyphicon-home" aria-hidden="true"></span>Show All Restaurants
-		</a>
-	</div>
-	<div class="col-md-6 text-right">
-					<p>Login Link will go Here </p>
-		
-	</div>
-</div>
+ <nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Catalog App</a>
+    </div>
+    <ul class="nav navbar-nav">
+      <li class="active"><a href="#">Home</a></li>
+      <li><a href="#">Page 1</a></li>
+      <li><a href="#">Page 2</a></li>
+    </ul>
+	<ul class="nav navbar-nav nav navbar-nav navbar-right">
+            {% if 'username' not in session %}
+                <li> 
+					<div id="signinButton">
+						<span class="g-signin"
+						data-scope="openid email"
+						data-clientid="13140951618-15nik769cellkubaqnjk5facdib2dh4d.apps.googleusercontent.com"
+						data-redirecturi="postmessage"
+						data-accesstype="offline"
+						data-cookiepolicy="single_host_origin"
+						data-callback="signInCallback"
+						data-approvalprompt="force">
+						</span>
+					</div>
+				</li>
+			{% else %}
+				<li>{{session['username']}}</li>
+				<li><a href="{{url_for('gdisconnect')}}">Logout</a></li>
+			{% endif %}
+          </ul>
+		  
+		  
+   
+  </div>
+</nav> 
+
+
+
