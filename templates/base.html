@@ -108,7 +108,6 @@
 		
 
       
-        </div>
         <!-- /.col-lg-3 -->
 		
 		 <div class="col-md-9">
@@ -129,11 +128,7 @@
                     {% for item in items %}
                         <div class="col-sm-4 col-lg-4 col-md-4">
                             <div class="thumbnail">
-                                {% if item.image == '' %}
-                                    <img src={{url_for('static', filename="img_not_available.png")}}>
-                                {% else %}
-                                    <img src="{{item.image}}" alt="{{item.name}} Image">
-                                {% endif %}
+                               
                                 <h4 class="text-center">{{item.name}}</h4>
                                 <div class="text-center">
                                 <p><a class="btn btn-default" href="{{url_for('showItem', category_name=item.category.name, item_name=item.name)}}" role="button">View details &raquo;</a></p>
@@ -144,40 +139,16 @@
                 </div>
             </div>
         </div>
-		
+		        </div>
+
 
       
 
-          <div class="card mt-4">
-            <img class="card-img-top img-fluid" src="http://placehold.it/900x400" alt="">
-            <div class="card-body">
-              <h3 class="card-title">Product Name</h3>
-              <h4>$24.99</h4>
-              <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sapiente dicta fugit fugiat hic aliquam itaque facere, soluta. Totam id dolores, sint aperiam sequi pariatur praesentium animi perspiciatis molestias iure, ducimus!</p>
-              <span class="text-warning">&#9733; &#9733; &#9733; &#9733; &#9734;</span>
-              4.0 stars
-            </div>
-          </div>
+          
+         
           <!-- /.card -->
 
-          <div class="card card-outline-secondary my-4">
-            <div class="card-header">
-              Product Reviews
-            </div>
-            <div class="card-body">
-              <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Omnis et enim aperiam inventore, similique necessitatibus neque non! Doloribus, modi sapiente laboriosam aperiam fugiat laborum. Sequi mollitia, necessitatibus quae sint natus.</p>
-              <small class="text-muted">Posted by Anonymous on 3/1/17</small>
-              <hr>
-              <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Omnis et enim aperiam inventore, similique necessitatibus neque non! Doloribus, modi sapiente laboriosam aperiam fugiat laborum. Sequi mollitia, necessitatibus quae sint natus.</p>
-              <small class="text-muted">Posted by Anonymous on 3/1/17</small>
-              <hr>
-              <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Omnis et enim aperiam inventore, similique necessitatibus neque non! Doloribus, modi sapiente laboriosam aperiam fugiat laborum. Sequi mollitia, necessitatibus quae sint natus.</p>
-              <small class="text-muted">Posted by Anonymous on 3/1/17</small>
-              <hr>
-              <a href="#" class="btn btn-success">Leave a Review</a>
-            </div>
-          </div>
-          <!-- /.card -->
+           <!-- /.card -->
 
         </div>
         <!-- /.col-lg-9 -->

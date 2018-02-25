@@ -27,7 +27,7 @@ APPLICATION_NAME = "Restaurant Menu Application"
 
 
 # Connect to Database and create database session
-engine = create_engine('sqlite:///catelog3.db')
+engine = create_engine('sqlite:///catalog_database.db')
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
@@ -453,10 +453,9 @@ def newItem():
         itemName = request.form['name']
         itemDescription = request.form['description']
         itemCategory = session.query(Category).filter_by(name=request.form['category']).one()
-        itemImage = request.form['image']
         if itemName != '':
             print "item name %s" % itemName
-            addingItem = Item(name=itemName, description=itemDescription, image=itemImage, category=itemCategory,
+            addingItem = Item(name=itemName, description=itemDescription,  category=itemCategory,
                               user_id=itemCategory.user_id)
             session.add(addingItem)
             session.commit()
