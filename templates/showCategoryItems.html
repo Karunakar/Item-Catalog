@@ -1,17 +1,8 @@
-{% extends "base.html" %}
+{% extends "mainpage.html" %}
 {% block content %}
-{% include "header.html" %}
 
     <div class="row">
-        <div class="col-md-3">
-            <p class="lead">Categories</p>
-            <div class="list-group">
-                {% for category in categories %}
-                    <a href="{{url_for('showCategoryItems', category_name=category.name)}}" class="list-group-item">{{category
-                        .name}}</a>
-                {% endfor %}
-            </div>
-        </div>
+       
         <div class="col-md-9">
             <div class="jumbotron">
                 <div class="row">
@@ -24,22 +15,10 @@
                     </div>
                 </div>
                 <hr>
-                <div class="row is-flex">
-                    {% for item in items %}
-                        <div class="col-sm-4 col-lg-4 col-md-4">
-                            <div class="thumbnail">
-                                
-                                <h4 class="text-center">{{item.name}}</h4>
-                                <div class="text-center">
-                                <p><a class="btn btn-default"
-                                      href="{{url_for('showItem', category_name=item.category.name, item_name=item.name)}}"
-                                      role="button">View details
-                                    &raquo;</a></p>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
+				
+		
+					
+               
             </div>
         </div>
     </div>

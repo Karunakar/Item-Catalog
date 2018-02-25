@@ -91,13 +91,13 @@ def itemsJSON(category_name):
 
 # Show cover page
 @app.route('/')
-def showCover():
-    categories = session.query(Category).order_by(asc(Category.name))
+def rootPage():
     items = session.query(Item).order_by(desc(Item.createdDate))
+    categories = session.query(Category).order_by(asc(Category.name))
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
        for x in xrange(32))
     login_session['state'] = state
-    return render_template('cover.html', STATE=state, categories=categories, items=items)
+    return render_template('root.html', STATE=state, categories=categories, items=items)
 
 # Check for user login status
 def login_required(f):
@@ -124,7 +124,7 @@ def showHome():
     if 'username' not in login_session:
         return render_template('publichome.html', categories=categories, items=items)
     else:
-        return render_template('home.html', categories=categories, items=items)
+        return render_template('root.html', categories=categories, items=items)
 
 
 
@@ -431,7 +431,7 @@ def showCategoryItems(category_name):
         return render_template('publicCategoryItems.html', categories=categories, chosenCategory=chosenCategory, items=items)
     else:
         return render_template('showCategoryItems.html', categories=categories, chosenCategory=chosenCategory, items=items)	
-	
+
 # Add a new category
 @app.route('/catalog/newcategory', methods=['GET','POST'])
 @login_required
@@ -466,18 +466,6 @@ def newItem():
         return render_template('newItem.html', categories=categories)
 
 	
-# Delete a menu item
-@app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/delete', methods=['GET', 'POST'])
-def deleteMenuItem(restaurant_id, menu_id):
-    restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
-    itemToDelete = session.query(MenuItem).filter_by(id=menu_id).one()
-    if request.method == 'POST':
-        session.delete(itemToDelete)
-        session.commit()
-        flash('Menu Item Successfully Deleted')
-        return redirect(url_for('showMenu', restaurant_id=restaurant_id))
-    else:
-        return render_template('deleteMenuItem.html', item=itemToDelete)
 
 
 # Edit a category
@@ -526,13 +514,16 @@ def deleteCategory(category_name):
 # Show information of a specific item
 @app.route('/catalog/<category_name>/<item_name>')
 def showItem(category_name, item_name):
+    categories = session.query(Category).order_by(asc(Category.name))
+    chosenCategory = session.query(Category).filter_by(name=category_name).one()
+    items = session.query(Item).filter_by(category_id=chosenCategory.id).order_by(asc(Item.name))
     category = session.query(Category).filter_by(name=category_name).one()
     item = session.query(Item).filter_by(name=item_name, category=category).one()
     creator = getUserInfo(item.user_id)
     if 'username' not in login_session or creator.id != login_session['user_id']:
         return render_template('publicitems.html', item=item)
     else:
-        return render_template('showItem.html', item=item, creator=creator)
+        return render_template('showItem.html', item=item, creator=creator,categories=categories, items=items)
 
 
 

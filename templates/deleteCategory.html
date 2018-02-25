@@ -1,10 +1,8 @@
-{% extends "base.html" %}
+{% extends "mainpage.html" %}
 {% block content %}
-{% include "header.html" %}
 
     <div class="jumbotron">
-        <h2>Deleting Category</h2>
-        <p>Are you sure you want to delete {{category.name}}?</p>
+        <p>Deelete Category {{category.name}}?</p>
         <form method="post">
             <button type="submit">
                 <span class="glyphicon glyphicon-trash">Delete</span>
