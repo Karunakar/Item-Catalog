@@ -8,10 +8,9 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Shop Item - Start Bootstrap Template</title>
+    <title>Categories App</title>
 
 	
-	<title>Simple Sidebar - Start Bootstrap Template</title>
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}">
 	
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/shop-item.css') }}">
@@ -45,24 +44,9 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
-            <li class="nav-item active">
-              <a class="nav-link" href="#">Home
-                <span class="sr-only">(current)</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">About</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Services</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Contact</a>
-            </li>
-			
 			 
             {% if 'username' not in session %}
-                <li class="nav-item"> 
+                <li class="nav-item active"> 
 					<div id="signinButton">
 						<span class="g-signin"
 						data-scope="openid email"
@@ -124,16 +108,10 @@
                     </div>
                 </div>
                 <hr>
-                <div class="row is-flex">
+                <div class=" is-flex">
                     {% for item in items %}
-                        <div class="col-sm-4 col-lg-4 col-md-4">
-                            <div class="thumbnail">
-                               
-                                <h4 class="text-center">{{item.name}}</h4>
-                                <div class="text-center">
-                                <p><a class="btn btn-default" href="{{url_for('showItem', category_name=item.category.name, item_name=item.name)}}" role="button">View details &raquo;</a></p>
-                                </div>
-                            </div>
+                        <div class="row col-sm-4 ">
+                              <a class="" href="{{url_for('showItem', category_name=item.category.name, item_name=item.name)}}" role="button">{{item.name}} </a>
                         </div>
                     {% endfor %}
                 </div>
@@ -153,9 +131,7 @@
         </div>
         <!-- /.col-lg-9 -->
 
-      </div>
-
-    </div>
+      
     <!-- /.container -->
 
     <!-- Footer -->
@@ -181,10 +157,7 @@
 
 
 
-<script>
-
-
-
+<script type="text/javascript">
 
 function signInCallback(authResult) {
 
