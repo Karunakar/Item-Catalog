@@ -23,7 +23,7 @@ app = Flask(__name__)
 
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
-APPLICATION_NAME = "Restaurant Menu Application"
+APPLICATION_NAME = "Catalog Items Application"
 
 
 # Connect to Database and create database session
@@ -228,37 +228,7 @@ def gdisconnect():
 
 
 
-
-
-
-# Disconnect user by calling either fbdisconnect or gdisconnect
-@app.route('/disconnect')
-def disconnect():
-    return redirect('/gdisconnect')
-		
-		
-
-# Get user id by email
-def getUserID(email):
-    try:
-        user = session.query(User).filter_by(email=email).one()
-        return user.id
-    except:
-        return None
-
-# Get user info
-def getUserInfo(user_id):
-    user = session.query(User).filter_by(id=user_id).one()
-    return user
-
-# Create a new user
-def createUser(login_session):
-    newUser = User(name=login_session['username'], email=login_session['email'], picture=login_session['picture'])
-    session.add(newUser)
-    session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
-    return user.id
-
+	
 # Show all items in a category
 @app.route('/catalog/<category_name>/items')
 def showCategoryItems(category_name):
@@ -328,25 +298,6 @@ def editCategory(category_name):
     else:
         return render_template('editCategory.html', category=categoryToEdit)
 
-# Delete a category
-@app.route('/catalog/<category_name>/delete', methods=['GET','POST'])
-@login_required
-def deleteCategory(category_name):
-    categoryToDelete = session.query(Category).filter_by(name=category_name).one()
-
-    """Prevent logged-in user to delete other user's category"""
-    if categoryToDelete.user_id != login_session['user_id']:
-        return "<script>function myFunction() {alert('You are not authorized to delete this category. Please create your own " \
-               "category " \
-               "in order to delete.');}</script><body onload='myFunction()'>"
-
-    """Delete category from the database"""
-    if request.method == 'POST':
-        session.delete(categoryToDelete)
-        session.commit()
-        return redirect(url_for('showHome'))
-    else:
-        return render_template('deleteCategory.html', category=categoryToDelete)
 
 
 
