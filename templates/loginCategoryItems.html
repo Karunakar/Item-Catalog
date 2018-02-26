@@ -1,0 +1,25 @@
+{% extends "mainpage.html" %}
+{% block content %}
+
+    <div class="row">
+       
+        <div class="col-md-9">
+            <div class="jumbotron">
+                <div class="row">
+                    <div class="col-md-6">
+						                        <a href="{{url_for('editCategory', category_name=chosenCategory.name)}}">                        <h2 class="no-margin">{{chosenCategory.name}}</h2>
+ </a>
+
+                    </div>
+                
+                </div>
+                <hr>
+				
+		
+					
+               
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
