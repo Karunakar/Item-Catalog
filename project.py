@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect, jsonify, url_for, flash
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Restaurant, MenuItem
 from flask import session as login_session
 import random
 from sqlalchemy import desc
@@ -17,7 +16,7 @@ from functools import wraps
 
 import os
 
-from database_setup import Base, User, Category, Item
+from categories_menu_setup import Base, GoogleUser, Category, Item
 
 app = Flask(__name__)
 
@@ -64,6 +63,21 @@ def logout():
         return redirect(url_for('showRestaurants'))
 
 
+# Get user id by email
+def getUserID(email):
+    try:
+        user = session.query(User).filter_by(email=email).one()
+        return user.id
+    except:
+        return None
+# Create a new user
+def createUser(login_session):
+    newUser = GoogleUser(name=login_session['username'], email=login_session['email'], picture=login_session['picture'])
+    session.add(newUser)
+    session.commit()
+    user = session.query(GoogleUser).filter_by(email=login_session['email']).one()
+    return user.id
+
 
 # API endpoints for all categories.
 @app.route('/categories.json')
@@ -71,7 +85,9 @@ def categoriesJSON():
     categories = session.query(Category).all()
     return jsonify(Categories = [c.serialize for c in categories])
 
-
+def getUserInfo(user_id):
+    user = session.query(GoogleUser).filter_by(id=user_id).one()
+    return user
 
 # Show cover page
 @app.route('/')
@@ -217,7 +233,6 @@ def gdisconnect():
         del login_session['gplus_id']
         del login_session['username']
         del login_session['email']
-        del login_session['picture']
         response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response

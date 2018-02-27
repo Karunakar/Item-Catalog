@@ -45,13 +45,12 @@ class MenuItem(Base):
         }
 
 
-class User(Base):
-    __tablename__ = 'user'
+class GoogleUser(Base):
+    __tablename__ = 'google_users'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
     email = Column(String(250), nullable=False)
-    picture = Column(String)
 
     @property
     def serialize(self):
@@ -62,7 +61,7 @@ class User(Base):
         }
 
 class Category(Base):
-    __tablename__ = 'category'
+    __tablename__ = 'categories'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
@@ -88,7 +87,7 @@ class Item(Base):
     category_id = Column(Integer, ForeignKey('category.id'))
     category = relationship(Category)
     user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship(User)
+    user = relationship(GoogleUser)
 
     @property
     def serialize(self):
