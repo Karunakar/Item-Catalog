@@ -84,7 +84,7 @@
             </div>
             <div class="list-group">
                 {% for category in categories %}
-                    <a href="{{url_for('showItems', category_name=category.name)}}" class="list-group-item">{{category
+                    <a href="{{url_for('showItems', name=category.name)}}" class="list-group-item">{{category
                         .name}}</a>
                 {% endfor %}
             </div>
@@ -109,7 +109,7 @@
                         <h4 class="no-margin">Latest Items </h4>
                    		{% for item in items %}
 							<div class="row col-sm-4 ">
-								  <a class="list-group-item" href="{{url_for('showItem', category_name=item.category.name, item_name=item.name)}}" >{{item.name}} </a>
+								  <a class="list-group-item" href="{{url_for('showItem', c_name=item.category.name, i_name=item.name)}}" >{{item.name}} </a>
 							</div>
 						{% endfor %}
 					</div>

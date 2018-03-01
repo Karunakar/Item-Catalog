@@ -10,8 +10,8 @@
                         <h2 class="no-margin">{{chosenCategory.name}}</h2>
                     </div>
                     <div class="col-md-6 text-right">
-                        <a href="{{url_for('editCategory', category_name=chosenCategory.name)}}">Edit |</a>
-                        <a href="{{url_for('deleteCategory', category_name=chosenCategory.name)}}">Delete</a>
+                        <a href="{{url_for('CategoryEdit', c_name=chosenCategory.name)}}">Edit |</a>
+                        <a href="{{url_for('deleteCategory', c_name=chosenCategory.name)}}">Delete</a>
                     </div>
                 </div>
                 <hr>

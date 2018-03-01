@@ -258,16 +258,16 @@ def gdisconnect():
 
 	
 
-@app.route('/catalog/<category_name>/items')
-def showItems(category_name):
-    categories = session.query(Category).order_by(asc(Category.name))
-    chosenCategory = session.query(Category).filter_by(name=category_name).one()
-    items = session.query(Item).filter_by(category_id=chosenCategory.id).order_by(asc(Item.name))
-    creator = getUserInfo(chosenCategory.user_id)
+@app.route('/catalog/<name>/items')
+def showItems(name):
+    cat_list = session.query(Category).order_by(asc(Category.name))
+    Cat = session.query(Category).filter_by(name=name).one()
+    items = session.query(Item).filter_by(category_id=Cat.id).order_by(asc(Item.name))
+    creator = getUserInfo(Cat.user_id)
     if 'username' not in login_session or creator.id != login_session['user_id']:
-        return render_template('withoutLoginCategoryItems.html', categories=categories, chosenCategory=chosenCategory, items=items)
+        return render_template('withoutLoginCategoryItems.html', categories=cat_list, chosenCategory=Cat, items=items)
     else:
-        return render_template('loginCategoryItems.html', categories=categories, chosenCategory=chosenCategory, items=items)	
+        return render_template('loginCategoryItems.html', categories=cat_list, chosenCategory=Cat, items=items)	
 
 
 	
@@ -276,29 +276,29 @@ def showItems(category_name):
 	
 
 
-@app.route('/catalog/<category_name>/edit', methods=['GET','POST'])
+@app.route('/catalog/<c_name>/edit', methods=['GET','POST'])
 @login_required
-def CategoryEdit(category_name):
-    categoryToEdit = session.query(Category).filter_by(name=category_name).one()
+def CategoryEdit(c_name):
+    cat = session.query(Category).filter_by(name=c_name).one()
 
     if request.method == 'POST':
-        categoryToEdit.name = request.form['name']
-        session.add(categoryToEdit)
+        cat.name = request.form['name']
+        session.add(cat)
         session.commit()
         return redirect(url_for('showHome'))
     else:
-        return render_template('Category.html', category=categoryToEdit)
+        return render_template('cat.html', category=cat)
 
 
 
 
-@app.route('/catalog/<category_name>/<item_name>')
-def showItem(category_name, item_name):
+@app.route('/catalog/<c_name>/<i_name>')
+def showItem(c_name, i_name):
     categories = session.query(Category).order_by(asc(Category.name))
-    chosenCategory = session.query(Category).filter_by(name=category_name).one()
+    chosenCategory = session.query(Category).filter_by(name=c_name).one()
     items = session.query(Item).filter_by(category_id=chosenCategory.id).order_by(asc(Item.name))
-    category = session.query(Category).filter_by(name=category_name).one()
-    item = session.query(Item).filter_by(name=item_name, category=category).one()
+    cat = session.query(Category).filter_by(name=c_name).one()
+    item = session.query(Item).filter_by(name=i_name, category=cat).one()
     creator = getUserInfo(item.user_id)
     if 'username' not in login_session or creator.id != login_session['user_id']:
         return render_template('withoutloginitems.html', item=item)
@@ -307,19 +307,13 @@ def showItem(category_name, item_name):
 
 
 
-@app.route('/catalog/<category_name>/<item_name>/edit', methods=['GET','POST'])
+@app.route('/catalog/<c_name>/<i_name>/edit', methods=['GET','POST'])
 @login_required
-def editItem(category_name, item_name):
+def editItem(c_name, i_name):
     categories = session.query(Category).order_by(asc(Category.name))
-    editingItemCategory = session.query(Category).filter_by(name=category_name).one()
-    editingItem = session.query(Item).filter_by(name=item_name, category=editingItemCategory).one()
+    editingItemCategory = session.query(Category).filter_by(name=c_name).one()
+    editingItem = session.query(Item).filter_by(name=i_name, category=editingItemCategory).one()
 
-    """Prevent logged-in user to edit item which belongs to other user"""
-    if editingItem.user_id != login_session['user_id']:
-        return "<script>function myFunction() {alert('You are not authorized to edit this item. Please create your own item " \
-               "in order to edit.');}</script><body onload='myFunction()'>"
-
-    """Save edited item to the database"""
     if request.method == 'POST':
         if request.form['name']:
             editingItem.name = request.form['name']
@@ -333,20 +327,18 @@ def editItem(category_name, item_name):
     else:
         return render_template('editItem.html', categories=categories, editingItemCategory=editingItemCategory, item=editingItem)
 
-@app.route('/catalog/<category_name>/<item_name>/delete', methods=['GET','POST'])
+@app.route('/catalog/<c_name>/<i_name>/delete', methods=['GET','POST'])
 @login_required
-def deleteItem(category_name, item_name):
-    category = session.query(Category).filter_by(name=category_name).one()
-    deletingItem = session.query(Item).filter_by(name=item_name, category=category).one()
+def ItemDelete(c_name, i_name):
+    category = session.query(Category).filter_by(name=c_name).one()
+    deletingItem = session.query(Item).filter_by(name=i_name, category=category).one()
 
- 
-    """Delete item from the database"""
     if request.method == 'POST':
         session.delete(deletingItem)
         session.commit()
-        return redirect(url_for('showItems', category_name=category.name))
+        return redirect(url_for('showItems', name=category.name))
     else:
-        return render_template('deleteItem.html', item=deletingItem)
+        return render_template('itemDelete.html', item=deletingItem)
 		
 		
 if __name__ == '__main__':

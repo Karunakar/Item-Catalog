@@ -10,8 +10,8 @@
             <div class="col-md-9">
                 <h2>{{item.name}}</h2>
                 <p>{{item.description}}</p>
-                <a href="{{url_for('editItem', category_name=item.category.name, item_name=item.name)}}">Edit |</a>
-                <a href="{{url_for('deleteItem', category_name=item.category.name, item_name=item.name)}}">Delete</a>
+                <a href="{{url_for('editItem', c_name=item.category.name, i_name=item.name)}}">Edit |</a>
+                <a href="{{url_for('ItemDelete', c_name=item.category.name, i_name=item.name)}}">Delete</a>
             </div>
         </div>
     </div>
