@@ -61,7 +61,7 @@
 				</li>
 			{% else %}
 				<li class="nav-item">
-					<a class="nav-link" href="{{url_for('newCategory')}}">New Category</a>
+					<a class="nav-link" href="{{url_for('CategoryNew')}}">Add Category</a>
 				</li>	
 				<li class="nav-item"><a href="#" class="nav-link">{{session['username']}}</a></li>
 				<li class="nav-item"><a href="{{url_for('gdisconnect')}}" class="nav-link">Logout</a></li>
@@ -84,7 +84,7 @@
             </div>
             <div class="list-group">
                 {% for category in categories %}
-                    <a href="{{url_for('showCategoryItems', category_name=category.name)}}" class="list-group-item">{{category
+                    <a href="{{url_for('showItems', category_name=category.name)}}" class="list-group-item">{{category
                         .name}}</a>
                 {% endfor %}
             </div>

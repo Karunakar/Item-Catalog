@@ -60,17 +60,18 @@ def logout():
         return redirect(url_for('login'))
     else:
         flash("you were not logged in")
-        return redirect(url_for('showRestaurants'))
+        return redirect(url_for('showHome'))
 
 
-# Get user id by email
+		
+		
 def getUserID(email):
     try:
         user = session.query(User).filter_by(email=email).one()
         return user.id
     except:
         return None
-# Create a new user
+
 def createUser(login_session):
     newUser = GoogleUser(name=login_session['username'], email=login_session['email'], picture=login_session['picture'])
     session.add(newUser)
@@ -79,7 +80,7 @@ def createUser(login_session):
     return user.id
 
 
-# API endpoints for all categories.
+
 @app.route('/categories.json')
 def categoriesJSON():
     categories = session.query(Category).all()
@@ -89,7 +90,7 @@ def getUserInfo(user_id):
     user = session.query(GoogleUser).filter_by(id=user_id).one()
     return user
 
-# Show cover page
+
 @app.route('/')
 def rootPage():
     items = session.query(Item).order_by(desc(Item.createdDate))
@@ -99,7 +100,7 @@ def rootPage():
     login_session['state'] = state
     return render_template('root.html', STATE=state, categories=categories, items=items)
 
-# Check for user login status
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -110,9 +111,18 @@ def login_required(f):
     return decorated_function
 	
 	
+@app.route('/catalog/categorynew', methods=['GET','POST'])
+@login_required
+def CategoryNew():
+    if request.method == 'POST':
+        addingCategory = Category(name=request.form['name'], user_id=login_session['user_id'])
+        session.add(addingCategory)
+        session.commit()
+        return redirect(url_for('showHome'))
+    else:
+        return render_template('categoryNew.html')
 
 
-# Show home page
 @app.route('/catalog')
 def showHome():
     categories = session.query(Category).order_by(asc(Category.name))
@@ -121,154 +131,9 @@ def showHome():
         return render_template('publichome.html', categories=categories, items=items)
     else:
         return render_template('root.html', categories=categories, items=items)
-
-
-
-	
-# Connect user using Google Plus account.
-@app.route('/gconnect', methods=['POST'])
-def gconnect():
-    if request.args.get('state') != login_session['state']:
-        response = make_response(json.dumps('Invalid state parameter'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-    code = request.data
-    try:
-        """Upgrade the authorization code into a credentials object"""
-        oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
-        oauth_flow.redirect_uri = 'postmessage'
-        credentials = oauth_flow.step2_exchange(code)
-    except FlowExchangeError:
-        response = make_response(json.dumps('Failed to upgrade the authorization code.'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-    """Check that access token is valid"""
-    access_token = credentials.access_token
-    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
-    h = httplib2.Http()
-    result = json.loads(h.request(url, 'GET')[1])
-
-    """If there was an error in the access token info, abort"""
-    if result.get('error') is not None:
-        response = make_response(json.dumps(result.get('error')), 500)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-    """Verify that the access token is used for the intended user"""
-    gplus_id = credentials.id_token['sub']
-    if result['user_id'] != gplus_id:
-        response = make_response(json.dumps("Token's user ID doesn't match given user ID"), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-    """Verify that the access token is valid for this app"""
-    if result['issued_to'] != CLIENT_ID:
-        response = make_response(json.dumps("Token's client ID doesn't match app's"), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-    """Check to see if user is already logged in"""
-    stored_access_token = login_session.get('access_token')
-    stored_gplus_id = login_session.get('gplus_id')
-    if stored_access_token is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected'), 200)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-    """Store the access token in the session for later use"""
-    login_session['access_token'] = credentials.access_token
-    login_session['gplus_id'] = gplus_id
-
-    """Get user info and store in login session for later use"""
-    userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
-    params = {'access_token': credentials.access_token, 'alt':'json'}
-    answer = requests.get(userinfo_url, params=params)
-    data = json.loads(answer.text)
-
-    login_session['username'] = data['name']
-    login_session['picture'] = data['picture']
-    login_session['email'] = data['email']
-
-    """See if user exists, if it doesn't make a new one"""
-    user_id = getUserID(login_session['email'])
-    if not user_id:
-        user_id = createUser(login_session)
-    login_session['user_id'] = user_id
-
-    """Render welcome message if user logged in successfully"""
-    output = ''
-    output += '<h1>Welcome, '
-    output += login_session['username']
-    output += '!</h1>'
-    output += '<img src="'
-    output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
-    flash("You Are Now Logged In As %s" % login_session['username'])
-    print "done!"
-    return output
-
-
-@app.route('/gdisconnect')
-def gdisconnect():
-    access_token = login_session.get('access_token')
-    if access_token is None:
-        print 'Access Token is None'
-        response = make_response(json.dumps('Current user not connected.'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-    print 'In gdisconnect access token is %s', access_token
-    print 'User name is: '
-    # print login_session['username']
-
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
-    h = httplib2.Http()
-    result = h.request(url, 'GET')[0]
-    print login_session['access_token']
-    print result
-
-
-    if result['status'] == '200':
-        del login_session['access_token']
-        del login_session['gplus_id']
-        del login_session['username']
-        del login_session['email']
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-    else:
-        response = make_response(json.dumps('Failed to revoke token for given user.', 400))
-        response.headers['Content-Type'] = 'application/json'
-        return response
-
-
-
-	
-# Show all items in a category
-@app.route('/catalog/<category_name>/items')
-def showCategoryItems(category_name):
-    categories = session.query(Category).order_by(asc(Category.name))
-    chosenCategory = session.query(Category).filter_by(name=category_name).one()
-    items = session.query(Item).filter_by(category_id=chosenCategory.id).order_by(asc(Item.name))
-    creator = getUserInfo(chosenCategory.user_id)
-    if 'username' not in login_session or creator.id != login_session['user_id']:
-        return render_template('withoutLoginCategoryItems.html', categories=categories, chosenCategory=chosenCategory, items=items)
-    else:
-        return render_template('loginCategoryItems.html', categories=categories, chosenCategory=chosenCategory, items=items)	
-
-# Add a new category
-@app.route('/catalog/newcategory', methods=['GET','POST'])
-@login_required
-def newCategory():
-    if request.method == 'POST':
-        addingCategory = Category(name=request.form['name'], user_id=login_session['user_id'])
-        session.add(addingCategory)
-        session.commit()
-        return redirect(url_for('showHome'))
-    else:
-        return render_template('newCategory.html')
-	
-# Add a new item
+		
+		
+		
 @app.route('/catalog/newitem', methods=['GET','POST'])
 @login_required
 def newItem():
@@ -288,35 +153,145 @@ def newItem():
             return render_template('newItem.html', categories=categories)
     else:
         return render_template('newItem.html', categories=categories)
+	
+@app.route('/gconnect', methods=['POST'])
+def gconnect():
+    if request.args.get('state') != login_session['state']:
+        response = make_response(json.dumps('Invalid state parameter'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    code = request.data
+    try:
+        oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
+        oauth_flow.redirect_uri = 'postmessage'
+        credentials = oauth_flow.step2_exchange(code)
+    except FlowExchangeError:
+        response = make_response(json.dumps('Failed to upgrade the authorization code.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    access_token = credentials.access_token
+    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
+    h = httplib2.Http()
+    result = json.loads(h.request(url, 'GET')[1])
+
+    if result.get('error') is not None:
+        response = make_response(json.dumps(result.get('error')), 500)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    gplus_id = credentials.id_token['sub']
+    if result['user_id'] != gplus_id:
+        response = make_response(json.dumps("Token's user ID doesn't match given user ID"), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    if result['issued_to'] != CLIENT_ID:
+        response = make_response(json.dumps("Token's client ID doesn't match app's"), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    stored_access_token = login_session.get('access_token')
+    stored_gplus_id = login_session.get('gplus_id')
+    if stored_access_token is not None and gplus_id == stored_gplus_id:
+        response = make_response(json.dumps('Current user is already connected'), 200)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    login_session['access_token'] = credentials.access_token
+    login_session['gplus_id'] = gplus_id
+
+    userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
+    params = {'access_token': credentials.access_token, 'alt':'json'}
+    answer = requests.get(userinfo_url, params=params)
+    data = json.loads(answer.text)
+
+    login_session['username'] = data['name']
+    login_session['picture'] = data['picture']
+    login_session['email'] = data['email']
+
+    user_id = getUserID(login_session['email'])
+    if not user_id:
+        user_id = createUser(login_session)
+    login_session['user_id'] = user_id
+
+    output = ''
+    output += '<h1>Welcome, '
+    output += login_session['username']
+    output += '!</h1>'
+    output += '<img src="'
+    output += login_session['picture']
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    flash("You Are Now Logged In As %s" % login_session['username'])
+    return output
+
+
+@app.route('/gdisconnect')
+def gdisconnect():
+    access_token = login_session.get('access_token')
+    if access_token is None:
+        response = make_response(json.dumps('Current user not connected.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+ 
+
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[0]
+    print result
+
+
+    if result['status'] == '200':
+        del login_session['access_token']
+        del login_session['gplus_id']
+        del login_session['username']
+        del login_session['email']
+        response = make_response(json.dumps('Successfully disconnected.'), 200)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    else:
+        response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+
+
+	
+
+@app.route('/catalog/<category_name>/items')
+def showItems(category_name):
+    categories = session.query(Category).order_by(asc(Category.name))
+    chosenCategory = session.query(Category).filter_by(name=category_name).one()
+    items = session.query(Item).filter_by(category_id=chosenCategory.id).order_by(asc(Item.name))
+    creator = getUserInfo(chosenCategory.user_id)
+    if 'username' not in login_session or creator.id != login_session['user_id']:
+        return render_template('withoutLoginCategoryItems.html', categories=categories, chosenCategory=chosenCategory, items=items)
+    else:
+        return render_template('loginCategoryItems.html', categories=categories, chosenCategory=chosenCategory, items=items)	
+
 
 	
 
 
-# Edit a category
+	
+
+
 @app.route('/catalog/<category_name>/edit', methods=['GET','POST'])
 @login_required
-def editCategory(category_name):
+def CategoryEdit(category_name):
     categoryToEdit = session.query(Category).filter_by(name=category_name).one()
 
-    """Prevent logged-in user to edit other user's category"""
-    if categoryToEdit.user_id != login_session['user_id']:
-        return "<script>function myFunction() {alert('You are not authorized to edit this category. Please create your own " \
-               "category " \
-               "in order to edit.');}</script><body onload='myFunction()'>"
-
-    """Save edited category to the database"""
     if request.method == 'POST':
         categoryToEdit.name = request.form['name']
         session.add(categoryToEdit)
         session.commit()
         return redirect(url_for('showHome'))
     else:
-        return render_template('editCategory.html', category=categoryToEdit)
+        return render_template('Category.html', category=categoryToEdit)
 
 
 
 
-# Show information of a specific item
 @app.route('/catalog/<category_name>/<item_name>')
 def showItem(category_name, item_name):
     categories = session.query(Category).order_by(asc(Category.name))
@@ -332,7 +307,6 @@ def showItem(category_name, item_name):
 
 
 
-# Edit an item
 @app.route('/catalog/<category_name>/<item_name>/edit', methods=['GET','POST'])
 @login_required
 def editItem(category_name, item_name):
@@ -359,23 +333,18 @@ def editItem(category_name, item_name):
     else:
         return render_template('editItem.html', categories=categories, editingItemCategory=editingItemCategory, item=editingItem)
 
-# Delete an item
 @app.route('/catalog/<category_name>/<item_name>/delete', methods=['GET','POST'])
 @login_required
 def deleteItem(category_name, item_name):
     category = session.query(Category).filter_by(name=category_name).one()
     deletingItem = session.query(Item).filter_by(name=item_name, category=category).one()
 
-    """Prevent logged-in user to delete item which belongs to other user"""
-    if deletingItem.user_id != login_session['user_id']:
-        return "<script>function myFunction() {alert('You are not authorized to delete this item. Please create your own item " \
-               "in order to delete.');}</script><body onload='myFunction()'>"
-
+ 
     """Delete item from the database"""
     if request.method == 'POST':
         session.delete(deletingItem)
         session.commit()
-        return redirect(url_for('showCategoryItems', category_name=category.name))
+        return redirect(url_for('showItems', category_name=category.name))
     else:
         return render_template('deleteItem.html', item=deletingItem)
 		
