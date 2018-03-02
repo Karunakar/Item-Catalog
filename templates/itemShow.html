@@ -1,19 +1,10 @@
 {% extends "mainpage.html" %}
 {% block content %}
 
-    <div class="jumbotron">
-        <div class="row">
-            <div class="col-md-3">
-                <br>
-                
-            </div>
-            <div class="col-md-9">
+    
                 <h2><a href="{{url_for('editItem', c_name=item.category.name, i_name=item.name)}}"> {{item.name}}</a> &nbsp;&nbsp; | &nbsp;&nbsp; <a href="{{url_for('ItemDelete', c_name=item.category.name, i_name=item.name)}}">Delete</a></h2>
                 <p>{{item.description}}</p>
                
-                
-            </div>
-        </div>
-    </div>
+          
 
 {% endblock %}

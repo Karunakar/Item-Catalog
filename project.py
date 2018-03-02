@@ -12,10 +12,7 @@ import json
 from flask import make_response
 import requests
 from functools import wraps
-
-
 import os
-
 from categories_menu_setup import Base, GoogleUser, Category, Item
 
 app = Flask(__name__)
@@ -25,26 +22,21 @@ CLIENT_ID = json.loads(
 APPLICATION_NAME = "Catalog Items Application"
 
 
-# Connect to Database and create database session
 engine = create_engine('sqlite:///catalog_database.db')
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
-# Create anti-forgery state token
 @app.route('/login')
 def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
     login_session['state'] = state
-    # return "The current session state is %s" % login_session['state']
     return render_template('login.html', STATE=state)
-	
-	
+
 @app.route('/logout')
 def logout():
-    print login_session['username']
     if 'provider' in login_session:
         if login_session['provider'] == 'google':
           gdisconnect()
@@ -52,7 +44,6 @@ def logout():
           del login_session['access_token']
         del login_session['username']
         del login_session['email']
-        del login_session['picture']
         del login_session['user_id']
         del login_session['provider']
         flash("you have succesfully been logout")
@@ -61,10 +52,7 @@ def logout():
     else:
         flash("you were not logged in")
         return redirect(url_for('showHome'))
-
-
-		
-		
+	
 def getUserID(email):
     try:
         user = session.query(User).filter_by(email=email).one()
@@ -73,13 +61,11 @@ def getUserID(email):
         return None
 
 def createUser(login_session):
-    newUser = GoogleUser(name=login_session['username'], email=login_session['email'], picture=login_session['picture'])
+    newUser = GoogleUser(name=login_session['username'], email=login_session['email'])
     session.add(newUser)
     session.commit()
     user = session.query(GoogleUser).filter_by(email=login_session['email']).one()
     return user.id
-
-
 
 @app.route('/categories.json')
 def categoriesJSON():
@@ -90,16 +76,14 @@ def getUserInfo(user_id):
     user = session.query(GoogleUser).filter_by(id=user_id).one()
     return user
 
-
 @app.route('/')
 def rootPage():
-    items = session.query(Item).order_by(desc(Item.createdDate))
-    categories = session.query(Category).order_by(asc(Category.name))
+    items = session.query(Item)
+    categories = session.query(Category)
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
        for x in xrange(32))
     login_session['state'] = state
     return render_template('root.html', STATE=state, categories=categories, items=items)
-
 
 def login_required(f):
     @wraps(f)
@@ -110,6 +94,17 @@ def login_required(f):
             return redirect(url_for('showLogin', next=request.url))
     return decorated_function
 	
+@app.route('/catalog/<name>/items')
+def showItems(name):
+    cat_list = session.query(Category)
+    Cat = session.query(Category).filter_by(name=name).one()
+    items = session.query(Item).filter_by(category_id=Cat.id)
+    creator = getUserInfo(Cat.user_id)
+    if 'username' not in login_session or creator.id != login_session['user_id']:
+        return render_template('withoutLoginCategoryItems.html', categories=cat_list, chosenCategory=Cat, items=items)
+    else:
+        return render_template('loginCategoryItems.html', categories=cat_list, chosenCategory=Cat, items=items)	
+
 	
 @app.route('/catalog/categorynew', methods=['GET','POST'])
 @login_required
@@ -125,10 +120,10 @@ def CategoryNew():
 
 @app.route('/catalog')
 def showHome():
-    categories = session.query(Category).order_by(asc(Category.name))
-    items = session.query(Item).order_by(desc(Item.createdDate))
+    categories = session.query(Category)
+    items = session.query(Item)
     if 'username' not in login_session:
-        return render_template('publichome.html', categories=categories, items=items)
+        return render_template('homewithoutlogin.html', categories=categories, items=items)
     else:
         return render_template('root.html', categories=categories, items=items)
 		
@@ -137,7 +132,7 @@ def showHome():
 @app.route('/catalog/newitem', methods=['GET','POST'])
 @login_required
 def newItem():
-    categories = session.query(Category).order_by(asc(Category.name))
+    categories = session.query(Category)
     if request.method == 'POST':
         itemName = request.form['name']
         itemDescription = request.form['description']
@@ -150,9 +145,21 @@ def newItem():
             session.commit()
             return redirect(url_for('showHome'))
         else:
-            return render_template('newItem.html', categories=categories)
+            return render_template('itemNew.html', categories=categories)
     else:
-        return render_template('newItem.html', categories=categories)
+        return render_template('itemNew.html', categories=categories)
+		
+@app.route('/catalog/<c_name>/edit', methods=['GET','POST'])
+@login_required
+def CategoryEdit(c_name):
+    cat = session.query(Category).filter_by(name=c_name).one()
+    if request.method == 'POST':
+        cat.name = request.form['name']
+        session.add(cat)
+        session.commit()
+        return redirect(url_for('showHome'))
+    else:
+        return render_template('categoryEdit.html', category=cat)
 	
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
@@ -207,7 +214,6 @@ def gconnect():
     data = json.loads(answer.text)
 
     login_session['username'] = data['name']
-    login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
     user_id = getUserID(login_session['email'])
@@ -219,9 +225,7 @@ def gconnect():
     output += '<h1>Welcome, '
     output += login_session['username']
     output += '!</h1>'
-    output += '<img src="'
-    output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+   
     flash("You Are Now Logged In As %s" % login_session['username'])
     return output
 
@@ -238,8 +242,6 @@ def gdisconnect():
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
-    print result
-
 
     if result['status'] == '200':
         del login_session['access_token']
@@ -254,49 +256,11 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
-
-
-	
-
-@app.route('/catalog/<name>/items')
-def showItems(name):
-    cat_list = session.query(Category).order_by(asc(Category.name))
-    Cat = session.query(Category).filter_by(name=name).one()
-    items = session.query(Item).filter_by(category_id=Cat.id).order_by(asc(Item.name))
-    creator = getUserInfo(Cat.user_id)
-    if 'username' not in login_session or creator.id != login_session['user_id']:
-        return render_template('withoutLoginCategoryItems.html', categories=cat_list, chosenCategory=Cat, items=items)
-    else:
-        return render_template('loginCategoryItems.html', categories=cat_list, chosenCategory=Cat, items=items)	
-
-
-	
-
-
-	
-
-
-@app.route('/catalog/<c_name>/edit', methods=['GET','POST'])
-@login_required
-def CategoryEdit(c_name):
-    cat = session.query(Category).filter_by(name=c_name).one()
-
-    if request.method == 'POST':
-        cat.name = request.form['name']
-        session.add(cat)
-        session.commit()
-        return redirect(url_for('showHome'))
-    else:
-        return render_template('categoryEdit.html', category=cat)
-
-
-
-
 @app.route('/catalog/<c_name>/<i_name>')
 def showItem(c_name, i_name):
-    categories = session.query(Category).order_by(asc(Category.name))
+    categories = session.query(Category)
     chosenCategory = session.query(Category).filter_by(name=c_name).one()
-    items = session.query(Item).filter_by(category_id=chosenCategory.id).order_by(asc(Item.name))
+    items = session.query(Item).filter_by(category_id=chosenCategory.id)
     cat = session.query(Category).filter_by(name=c_name).one()
     item = session.query(Item).filter_by(name=i_name, category=cat).one()
     creator = getUserInfo(item.user_id)
@@ -310,20 +274,16 @@ def showItem(c_name, i_name):
 @app.route('/catalog/<c_name>/<i_name>/edit', methods=['GET','POST'])
 @login_required
 def editItem(c_name, i_name):
-    categories = session.query(Category).order_by(asc(Category.name))
+    categories = session.query(Category)
     editingItemCategory = session.query(Category).filter_by(name=c_name).one()
     editingItem = session.query(Item).filter_by(name=i_name, category=editingItemCategory).one()
-
     if request.method == 'POST':
-        if request.form['name']:
-            editingItem.name = request.form['name']
-        if request.form['description']:
-            editingItem.description = request.form['description']
-        if request.form['category']:
-            editingItem.category = session.query(Category).filter_by(name=request.form['category']).one()
-        session.add(editingItem)
-        session.commit()
-        return redirect(url_for('showItem', c_name=editingItemCategory.name, i_name=editingItem.name))
+		editingItem.name = request.form['name']
+		editingItem.description = request.form['description']
+		editingItem.category = session.query(Category).filter_by(name=request.form['category']).one()
+		session.add(editingItem)
+		session.commit()
+		return redirect(url_for('showItem', c_name=editingItemCategory.name, i_name=editingItem.name))
     else:
         return render_template('editItem.html', categories=categories, editingItemCategory=editingItemCategory, item=editingItem)
 
@@ -332,7 +292,6 @@ def editItem(c_name, i_name):
 def ItemDelete(c_name, i_name):
     category = session.query(Category).filter_by(name=c_name).one()
     deletingItem = session.query(Item).filter_by(name=i_name, category=category).one()
-
     if request.method == 'POST':
         session.delete(deletingItem)
         session.commit()

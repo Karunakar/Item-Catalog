@@ -1,0 +1,10 @@
+{% extends "mainpage.html" %}
+{% block content %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <h2 class="no-margin">
+							<a href="{{url_for('CategoryEdit', c_name=chosenCategory.name)}}">{{chosenCategory.name}} | </a> <a href="{{url_for('deleteCategory', c_name=chosenCategory.name)}}">Delete</a></h2>
+                    </div>
+                </div>
+                <hr>
+{% endblock %}
