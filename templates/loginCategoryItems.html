@@ -1,8 +1,6 @@
 {% extends "mainpage.html" %}
 {% block content %}
-
 		<a href="{{url_for('CategoryEdit', c_name=chosenCategory.name)}}">                        
 			<h2 class="no-margin">{{chosenCategory.name}}</h2>
 		</a>
-
 {% endblock %}
