@@ -1,19 +1,18 @@
 {% extends "mainpage.html" %}
 {% block content %}
 
-    <div class="jumbotron">
-        
+   
         <p>Delete Iteam {{item.name}}?</p>
         <form method="post">
             <button type="submit">
                 <span class="glyphicon glyphicon-trash">Delete</span>
             </button>
             <a href="{{url_for('showItem', c_name=item.category.name, i_name=item.name)}}">
-                <button type="button">
+               
                     <span class="glyphicon glyphicon-remove">Cancel</span>
-                </button>
+               
             </a>
         </form>
-    </div>
+    
 
 {% endblock %}

@@ -287,7 +287,7 @@ def CategoryEdit(c_name):
         session.commit()
         return redirect(url_for('showHome'))
     else:
-        return render_template('cat.html', category=cat)
+        return render_template('categoryEdit.html', category=cat)
 
 
 
