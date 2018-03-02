@@ -267,7 +267,7 @@ def showItem(c_name, i_name):
     if 'username' not in login_session or creator.id != login_session['user_id']:
         return render_template('withoutloginitems.html', item=item)
     else:
-        return render_template('showItem.html', item=item, creator=creator,categories=categories, items=items)
+        return render_template('itemShow.html', item=item, creator=creator,categories=categories, items=items)
 
 
 
