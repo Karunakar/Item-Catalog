@@ -5,11 +5,11 @@
         <p>Delete Iteam {{item.name}}?</p>
         <form method="post">
             <button type="submit">
-                <span class="glyphicon glyphicon-trash">Delete</span>
+               Delete
             </button>
             <a href="{{url_for('showItem', c_name=item.category.name, i_name=item.name)}}">
                
-                    <span class="glyphicon glyphicon-remove">Cancel</span>
+                    Cancel
                
             </a>
         </form>

@@ -323,7 +323,7 @@ def editItem(c_name, i_name):
             editingItem.category = session.query(Category).filter_by(name=request.form['category']).one()
         session.add(editingItem)
         session.commit()
-        return redirect(url_for('showItem', category_name=editingItemCategory.name, item_name=editingItem.name))
+        return redirect(url_for('showItem', c_name=editingItemCategory.name, i_name=editingItem.name))
     else:
         return render_template('editItem.html', categories=categories, editingItemCategory=editingItemCategory, item=editingItem)
 
