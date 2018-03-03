@@ -6,7 +6,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
 import datetime
 
-
 Base = declarative_base()
 
 class GoogleUser(Base):
@@ -31,25 +30,6 @@ class Category(Base):
 	        'name': self.name,
 	    }
 
-class CategoryItem(Base):
-	__tablename__ = 'category_item'
-
-	name = Column(String(80), nullable = False)
-	description = Column(String(250))
-	id = Column(Integer, primary_key = True)
-	category_id = Column(Integer, ForeignKey('category.id'))
-	category = relationship(Category)
-	user_id = Column(Integer, ForeignKey('user.id'))
-	user = relationship(GoogleUser)
-
-	@property
-	def serialize(self):
-	    """Return object data in easily serializeable format"""
-	    return {
-	        'category': self.category.name,
-	        'description': self.description,
-	        'name': self.name,
-	    }
 
 class Item(Base):
     __tablename__ = 'item'
